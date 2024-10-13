@@ -2,23 +2,40 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Counter} from "../src/Counter.sol";
+import {SmartLottery} from "../src/Lottery.sol";
 
 contract CounterTest is Test {
-    Counter public counter;
+    SmartLottery public lottery;
+    address owner = makeAddr("owner");
+    address user1 = makeAddr("user1");
+    address user2 = makeAddr("user2");
+    address user3 = makeAddr("user3");
 
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        vm.startPrank(owner);
+        lottery = new SmartLottery(1);
+        vm.stopPrank();
     }
 
-    function test_Increment() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
+    function test_Lot() public {
+        vm.startPrank(owner);
+        vm.deal(owner, 10 ether);
+        lottery.createLottery(1 ether, block.timestamp, block.timestamp + 10 days);
+        lottery.createLottery(1 ether, block.timestamp, block.timestamp + 10 days);
+        lottery.createLottery(1 ether, block.timestamp, block.timestamp + 10 days);
 
-    function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+        vm.warp(block.timestamp + 1 days);
+
+        lottery.enterLottery{value: 1 ether}(1);
+
+        vm.warp(block.timestamp + 6 days);
+
+        lottery.enterLottery{value: 1 ether}(1);
+
+        lottery.enterLottery{value: 1 ether}(1);
+
+        lottery.DrawLotteryWinner(0);
+
+        vm.stopPrank();
     }
 }
